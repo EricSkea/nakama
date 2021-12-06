@@ -253,6 +253,7 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"channeldIdBuild":                 n.channelIdBuild(r),
 		"binaryToString":                  n.binaryToString(r),
 		"stringToBinary":                  n.stringToBinary(r),
+		"findStackTrace":                  n.findStackTrace(r),
 	}
 }
 
@@ -6954,6 +6955,19 @@ func getJsString(r *goja.Runtime, v goja.Value) string {
 		panic(r.NewTypeError("expects string"))
 	}
 	return s
+}
+
+func (n *runtimeJavascriptNakamaModule) findStackTrace(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		var stackLines []string
+		var stack []goja.StackFrame = r.CaptureCallStack(0, nil)
+		for _, frame := range stack {
+			var buffer = new(bytes.Buffer)
+			frame.Write(buffer)
+			stackLines = append(stackLines, buffer.String())
+		}
+		return r.ToValue(stackLines)
+	}
 }
 
 func getJsStringMap(r *goja.Runtime, v goja.Value) map[string]string {
